@@ -131,7 +131,22 @@ endif
 #
 # Code generation logic.
 #
-
+hack/run-in-gopath.sh go2make            \
+	    k8s.io/kubernetes/...                \
+	    --prune  k8s.io/kubernetes/staging   \
+	    --prune  k8s.io/kubernetes/vendor    \
+	    k8s.io/kubernetes/vendor/k8s.io/...  \
+	    > $@.tmp
+	if [[ -s $@.tmp ]]; then                             \
+	    if ! cmp -s $@.tmp $@; then                      \
+	        if [[ "$(DBG_CODEGEN)" == 1 ]]; then         \
+	            echo "DBG: $(GO_PKGDEPS_FILE) changed";  \
+	        fi;                                          \
+	        cat $@.tmp > $@;                             \
+	    fi                                               \
+	else                                                 \
+	    kube::log::error "go2make produced no results";  \
+	    rm -f $@;                
 
 # prerelease-lifecycle generation
 #
